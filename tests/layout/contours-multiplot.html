@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <script type="text/javascript" src="../../protovis-d3.2.js"></script>
+    <script type="text/javascript" src="../multiplot.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript+protovis">
+      var xs = pv.range(0, data[0].length),
+          ys = pv.range(0, data.length),
+          zs = pv.range(-5, 2, 1),
+          w = 500, h = 500,
+          x = pv.Scale.linear(xs).range(0, w),
+          y = pv.Scale.linear(ys).range(0, h),
+          colours = pv.Scale.linear(zs).range("#00f", "#000");
+
+      var data2 = [];
+      data.map(function(l, iy) {
+        data2.push.apply(data2, l.map(function(k, ix) {
+          return {x: xs[ix], y: ys[iy], z: k}
+        }));
+      });
+      var vis = new pv.Panel()
+          .width(w)
+          .height(h)
+          .fillStyle('#fff')
+          .event("mousedown", pv.Behavior.pan())
+          .event("mousewheel", pv.Behavior.zoom())
+        .add(pv.Layout.Contours)
+          .grid(data2)
+          .levels(zs)
+        .contour.add(pv.Panel).add(pv.Line)
+          .data(function(d) d)
+          .left(function(d) x(d.x))
+          .bottom(function(d) y(d.y))
+          .fillStyle(function() colours(this.parent.data()).alpha(0.2))
+          //.strokeStyle(null)
+      vis.render();
+    </script>
+  </body>
+</html>

@@ -84,6 +84,8 @@ JS_LAYOUT_FILES = \
 	src/layout/Rollup.js \
 	src/layout/Matrix.js \
 	src/layout/Bullet.js \
+	src/contrib/delaunay.js \
+	src/layout/Contours.js \
 	src/behavior/Behavior.js \
 	src/behavior/Drag.js \
 	src/behavior/Point.js \
