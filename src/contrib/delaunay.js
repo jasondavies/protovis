@@ -109,6 +109,19 @@ Triangle.prototype.getPointOnEdge = function(v1,v2,level) {
     return [x,y,level]
 };
 
+var whichSide = function(v, points) {
+  var x = v.x, y = v.y,
+      x1 = points[0][0], y1 = points[0][1],
+      x2 = points[1][0], y2 = points[1][1];
+  var dist = (y - y1) * (x2 - x1) - (y2 - y1) * (x - x1);
+  if (dist > 0)
+    return(-1);
+  else if (dist < 0)
+    return(1);
+  else
+    return(0);
+}
+
 Triangle.prototype.intersectAt = function( level )
 {
     // get point of intersection at <level>
@@ -141,8 +154,11 @@ Triangle.prototype.intersectAt = function( level )
         if (this.v2.z < level && this.v1.z > level) {
             points.push(this.getPointOnEdge(this.v2,this.v1,level))
         }
+        if (points.length == 2 && whichSide(this.v0, points) != (this.v0.z > level ? 1 : -1)) {
+          points.reverse();
+        }
     } catch (e) {
-        log.error(e)
+        console.log(e)
         return false
     }
     return points

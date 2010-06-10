@@ -192,8 +192,8 @@ ContourBuilder.prototype.addSegment = function(a, b) {
     break;
 
     case 3:   // both matched, can merge sequences
-      // if the sequences are the same, do nothing, as we are simply closing this path (could set a flag)
-
+      // if the sequences are the same, do nothing, as we are simply closing
+      // this path
       if (ma === mb) {
         var pp = {p: ma.tail.p, next: ma.head, prev: null};
         ma.head.prev = pp;
@@ -240,9 +240,10 @@ ContourBuilder.prototype.addSegment = function(a, b) {
 pv.Layout.Contours.prototype.buildImplied = function(s) {
   pv.Layout.prototype.buildImplied.call(this, s);
   s.triangles = Triangulate(s.grid).filter(function(x) { return x });
+  var thatS = s;
   var lines = [];
   var contours = {};
-  // Naive implementation
+  // Naive implementation, steps through all triangles for each level
   for (var i=0; i<s.levels.length; i++) {
     var l = s.levels[i];
     var cb = contours[i];
@@ -253,16 +254,33 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
       var t = s.triangles[j];
       var points = t.intersectAt(l);
       if (points && points.length && points[0] && points[1]) {
-        cb.addSegment({x: points[0][0], y: points[0][1]}, {x: points[1][0], y: points[1][1]});
+        // Assume slope is increasing from left to right
+        cb.addSegment(
+          {x: points[0][0], y: points[0][1]},
+          {x: points[1][0], y: points[1][1]}
+        );
       }
     }
   }
+  var intersect = function(p, e0, e1) {
+    var m = (e1.y - e0.y) / (e1.x - e0.x);
+    var c = e1.y - m * e1.x;
+    var y = m * p.x + c;
+    return ((y - p.y) * (y - p.y) < EPSILON);
+  }
+  var minx = pv.min(thatS.grid, function(p) { return p.x }),
+      maxx = pv.max(thatS.grid, function(p) { return p.x }),
+      miny = pv.min(thatS.grid, function(p) { return p.y }),
+      maxy = pv.max(thatS.grid, function(p) { return p.y });
+  console.log('maxx='+maxx);
   var contourList = function() {
     var l = [];
     var a = contours;
     for (var k in a) {
+      //if (k!='25')continue;
       var s = a[k].s;
       var level = a[k].level;
+      var unclosed = [];
       while (s) {
         var h = s.head;
         var l2 = [];
@@ -272,8 +290,61 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
           l2.push(h.p);
           h = h.next;
         }
-        l.push(l2);
+        if (s.closed === false) {
+          unclosed.push(l2);
+        } else {
+          l.push(l2);
+        }
         s = s.next;
+      }
+      // Close any unclosed loops
+      var closeEnough = function(a0, b0) {
+        var ab = a0 - b0;
+        return ab * ab < EPSILON;
+      }
+      var code = function(points, chooseLast) {
+        var p = points[chooseLast ? points.length-1 : 0];
+        return closeEnough(p.x, minx) ? [0, p.y] :
+          closeEnough(p.y, maxy) ? [1, p.x] :
+          closeEnough(p.x, maxx) ? [2, -p.y] :
+          closeEnough(p.y, miny) ? [3, -p.x] :
+          [0, 0];
+      };
+      var compare = function(a, b) {
+        var a0 = code(a), b0 = code(b);
+        if (a0[0] == b0[0]) {
+          return a0[1] - b0[1];
+        }
+        return a0[0] - b0[0];
+      }
+      unclosed.sort(compare);
+      var fullEdge = null;
+      for (var i=0; i<unclosed.length; i++) {
+        var edge = unclosed[i];
+        var c = code(edge, true), c0;
+        fullEdge = unclosed[i+1];
+        if (fullEdge) {
+          c0 = code(fullEdge, false);
+        } else {
+          fullEdge = edge;
+          edge = [fullEdge[fullEdge.length-1]];
+          c = code(edge, true);
+          c0 = code(fullEdge, false);
+        }
+        if (c0[0] < c[0]) c0[0] += 4;
+        while (c0[0] > c[0]) {
+          var m = c0[0] % 4;
+          console.log(m);
+          fullEdge.unshift({
+            x: m == 0 || m == 1 ? minx : maxx,
+            y: m == 3 || m == 0 ? miny : maxy,
+            k: k});
+          c0[0]--;
+        }
+        fullEdge.unshift.apply(fullEdge, edge);
+      }
+      if (fullEdge) {
+        l.push(fullEdge);
       }
     }
     l.sort(function(a, b) { return a.k - b.k });

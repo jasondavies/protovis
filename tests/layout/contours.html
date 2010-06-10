@@ -6,7 +6,8 @@
   <body>
     <script type="text/javascript+protovis">
 
-var xs = ys = pv.range(-1, 1, 1/10);
+var xs = pv.range(-1, 1, 1/10);
+var ys = pv.range(-1, 1, 1/10);
 var color = pv.Colors.category19().by(function(d) d.k)
 var x = y = pv.Scale.linear(xs).range(0, 800);
 var data = [];
@@ -23,7 +24,7 @@ var vis = new pv.Panel()
     .height(800)
     .margin(10)
     .fillStyle("#eee")
-    .strokeStyle("#ccc");
+//    .strokeStyle("#ccc");
 
 vis.add(pv.Layout.Contours)
     .grid(data)
@@ -33,7 +34,7 @@ vis.add(pv.Layout.Contours)
     .left(function(d) x(d.x))
     .bottom(function(d) y(d.y))
     .fillStyle(function() color(this.parent.data()).alpha(0.2))
-    .strokeStyle(null)
+    .strokeStyle('black')
 
 vis.render();
 

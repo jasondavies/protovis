@@ -7,12 +7,22 @@
     <script type="text/javascript+protovis">
       var xs = pv.range(0, data[0].length),
           ys = pv.range(0, data.length),
-          zs = pv.range(-5, 2, 1),
-          w = 500, h = 500,
+          zs = pv.range(-5, 3, 1),
+          w = 800, h = 800,
           x = pv.Scale.linear(xs).range(0, w),
           y = pv.Scale.linear(ys).range(0, h),
           colours = pv.Scale.linear(zs).range("#00f", "#000");
 
+      var inputOrder = 'GLY ALA SER CYS VAL THR ILE PRO MET ASP ASN LEU LYS GLU GLN ARG HIS PHE TYR TRP'.split(/\s/);
+      var outputOrder = ["ILE", "VAL", "LEU", "PHE", "CYS", "MET", "ALA", "GLY", "THR", "SER", "TRP", "TYR", "PRO", "HIS", "ASN", "GLN", "ASP", "GLU", "LYS", "ARG"];
+      var order = pv.map(inputOrder, function(x) {
+        for (var i=0; i<outputOrder.length; i++) {
+          if (x == outputOrder[i]) {
+            return i;
+          }
+        }
+      });
+      //data = pv.permute(data, order, function(l) pv.permute(l, order));
       var data2 = [];
       data.map(function(l, iy) {
         data2.push.apply(data2, l.map(function(k, ix) {
