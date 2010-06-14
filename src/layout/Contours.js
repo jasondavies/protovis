@@ -52,12 +52,15 @@ pv.Layout.Contours = function() {
 };
 
 pv.Layout.Contours.prototype = pv.extend(pv.Layout)
-    .property("grid")
+    .property("nodes")
+    .property("links")
+    .property("rows")
+    .property("cols")
     .property("levels");
 
 pv.Layout.Contours.prototype.defaults = new pv.Layout.Contours()
     .extend(pv.Layout.prototype.defaults)
-    .grid([])
+    .nodes([])
     .levels([]);
 
 /** @private */
@@ -239,7 +242,9 @@ ContourBuilder.prototype.addSegment = function(a, b) {
 
 pv.Layout.Contours.prototype.buildImplied = function(s) {
   pv.Layout.prototype.buildImplied.call(this, s);
-  s.triangles = Triangulate(s.grid).filter(function(x) { return x });
+  if (!s.links) {
+    s.links = Triangulate(s.nodes).filter(function(x) { return x });
+  }
   var thatS = s;
   var lines = [];
   var contours = {};
@@ -250,8 +255,8 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
     if (!cb) {
       cb = contours[i] = new ContourBuilder(l);
     }
-    for (var j=0; j<s.triangles.length; j++) {
-      var t = s.triangles[j];
+    for (var j=0; j<s.links.length; j++) {
+      var t = s.links[j];
       var points = t.intersectAt(l);
       if (points && points.length && points[0] && points[1]) {
         // Assume slope is increasing from left to right
@@ -268,10 +273,10 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
     var y = m * p.x + c;
     return ((y - p.y) * (y - p.y) < EPSILON);
   }
-  var minx = pv.min(thatS.grid, function(p) { return p.x }),
-      maxx = pv.max(thatS.grid, function(p) { return p.x }),
-      miny = pv.min(thatS.grid, function(p) { return p.y }),
-      maxy = pv.max(thatS.grid, function(p) { return p.y });
+  var minx = pv.min(thatS.nodes, function(p) { return p.x }),
+      maxx = pv.max(thatS.nodes, function(p) { return p.x }),
+      miny = pv.min(thatS.nodes, function(p) { return p.y }),
+      maxy = pv.max(thatS.nodes, function(p) { return p.y });
   console.log('maxx='+maxx);
   var contourList = function() {
     var l = [];
