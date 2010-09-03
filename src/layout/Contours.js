@@ -277,7 +277,6 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
       maxx = pv.max(thatS.nodes, function(p) { return p.x }),
       miny = pv.min(thatS.nodes, function(p) { return p.y }),
       maxy = pv.max(thatS.nodes, function(p) { return p.y });
-  console.log('maxx='+maxx);
   var contourList = function() {
     var l = [];
     var a = contours;
@@ -339,7 +338,6 @@ pv.Layout.Contours.prototype.buildImplied = function(s) {
         if (c0[0] < c[0]) c0[0] += 4;
         while (c0[0] > c[0]) {
           var m = c0[0] % 4;
-          console.log(m);
           fullEdge.unshift({
             x: m == 0 || m == 1 ? minx : maxx,
             y: m == 3 || m == 0 ? miny : maxy,
